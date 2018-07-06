@@ -19,6 +19,7 @@ install_requires = [
     'pyeapi',
     'junos-eznc',
     'scp',
+    'f5-sdk',
 ]
 
 dependency_links = []
