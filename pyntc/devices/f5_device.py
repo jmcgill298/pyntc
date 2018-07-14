@@ -12,29 +12,20 @@ from f5.bigip import ManagementRoot
 
 from .base_device import BaseDevice
 
-F5_API_DEVICE_TYPE = 'f5_tmos_icontrol'
-
 
 class F5Device(BaseDevice):
     def __init__(self, host, username, password, **kwargs):
-        super(F5Device, self).__init__(host, username, password, vendor='f5',
-                                       device_type=F5_API_DEVICE_TYPE)
-
+        super(F5Device, self).__init__(host, username, password, vendor='f5', device_type='f5_tmos_icontrol')
         self.vendor = 'F5 Networks'
-
         self.hostname = host
         self.username = username
         self.password = password
-        self.api_handler = ManagementRoot(self.hostname, self.username,
-                                          self.password)
-
+        self.api_handler = ManagementRoot(self.hostname, self.username, self.password)
         self._open_soap()
 
     def _open_soap(self):
         try:
-            self.soap_handler = bigsuds.BIGIP(hostname=self.hostname,
-                                              username=self.username,
-                                              password=self.password)
+            self.soap_handler = bigsuds.BIGIP(hostname=self.hostname, username=self.username, password=self.password)
             self.devices = self.soap_handler.Management.Device.get_list()
         except bigsuds.OperationFailed as err:
             raise RuntimeError('ConfigSync API Error ({})'.format(err))
@@ -58,8 +49,7 @@ class F5Device(BaseDevice):
             int - number of gigabytes of free space
         """
         free_space = None
-        free_space_output = self.api_handler.tm.util.bash.exec_cmd('run',
-                                                                   utilCmdArgs='-c "vgdisplay -s --units G"')
+        free_space_output = self.api_handler.tm.util.bash.exec_cmd('run', utilCmdArgs='-c "vgdisplay -s --units G"')
         if free_space_output:
             free_space = free_space_output.commandResult
             free_space_regex = '.*\s\/\s(\d+\.?\d+) GB free'
@@ -97,9 +87,7 @@ class F5Device(BaseDevice):
             str - md5sum of the filename
         """
         md5sum_result = None
-        md5sum_output = self.api_handler.tm.util.bash.exec_cmd('run',
-                                                               utilCmdArgs='-c "md5sum {}"'.format(
-                                                                   filepath))
+        md5sum_output = self.api_handler.tm.util.bash.exec_cmd('run', utilCmdArgs='-c "md5sum {}"'.format(filepath))
         if md5sum_output:
             md5sum_result = md5sum_output.commandResult
             md5sum_result = md5sum_result.split()[0]
@@ -145,8 +133,7 @@ class F5Device(BaseDevice):
         Returns:
             bool - True / False if image exists
         """
-        all_images_output = self.api_handler.tm.util.unix_ls.exec_cmd('run',
-                                                                      utilCmdArgs="/shared/images")
+        all_images_output = self.api_handler.tm.util.unix_ls.exec_cmd('run', utilCmdArgs="/shared/images")
 
         if all_images_output:
             all_images = all_images_output.commandResult.splitlines()
@@ -164,8 +151,7 @@ class F5Device(BaseDevice):
         Returns:
             bool - True / False if volume exists
         """
-        result = self.api_handler.tm.sys.software.volumes.volume.exists(
-            name=volume_name)
+        result = self.api_handler.tm.sys.software.volumes.volume.exists(name=volume_name)
 
         return result
 
@@ -214,10 +200,7 @@ class F5Device(BaseDevice):
         if create_volume:
             options.append({'create-volume': True})
 
-        self.api_handler.tm.sys.software.images.exec_cmd('install',
-                                                         name=image_name,
-                                                         volume=volume,
-                                                         options=options)
+        self.api_handler.tm.sys.software.images.exec_cmd('install',  name=image_name, volume=volume, options=options)
 
     def image_installed(self, image_name, volume):
         """Checks if image is installed on a specified volume
@@ -240,7 +223,10 @@ class F5Device(BaseDevice):
             volumes = self._get_volumes()
 
             for _volume in volumes:
-                if _volume.name == volume and _volume.version == image.version and _volume.basebuild == image.build and _volume.status == 'complete':
+                if (
+                        _volume.name == volume and _volume.version == image.version and
+                        _volume.basebuild == image.build and _volume.status == 'complete'
+                ):
                     return True
 
         return False
@@ -280,13 +266,11 @@ class F5Device(BaseDevice):
             None
         """
         if volume_name:
-            self.api_handler.tm.sys.software.volumes.exec_cmd('reboot',
-                                                              volume=volume_name)
+            self.api_handler.tm.sys.software.volumes.exec_cmd('reboot', volume=volume_name)
         else:
             # F5 SDK API does not support reboot to the current volume.
             # This is a workaround by issuing reboot command from bash directly.
-            self.api_handler.tm.util.bash.exec_cmd('run',
-                                                   utilCmdArgs='-c "reboot"')
+            self.api_handler.tm.util.bash.exec_cmd('run', utilCmdArgs='-c "reboot"')
 
     def _wait_for_device_reboot(self, volume_name, timeout=600):
         """Waits for the device to be booted into a specified volume
@@ -302,8 +286,7 @@ class F5Device(BaseDevice):
             time.sleep(5)
             try:
                 self._reconnect()
-                volume = self.api_handler.tm.sys.software.volumes.volume.load(
-                    name=volume_name)
+                volume = self.api_handler.tm.sys.software.volumes.volume.load(name=volume_name)
                 if hasattr(volume, 'active') and volume.active is True:
                     return True
             except Exception:
@@ -337,9 +320,7 @@ class F5Device(BaseDevice):
                     end = size
                 content_range = "{}-{}/{}".format(start, end - 1, size)
                 headers['Content-Range'] = content_range
-                resp = requests.post(_URI, auth=(self.username, self.password),
-                                     data=payload, headers=headers,
-                                     verify=False)
+                requests.post(_URI, auth=(self.username, self.password), data=payload, headers=headers, verify=False)
 
                 start += len(payload)
 
@@ -366,21 +347,18 @@ class F5Device(BaseDevice):
 
     def file_copy(self, src, dest=None, **kwargs):
         if dest and not dest.startswith("/shared/images"):
-            raise NotImplementedError(
-                "Support only for images - destination is always /shared/images")
+            raise NotImplementedError("Support only for images - destination is always /shared/images")
 
         self._upload_image(image_filepath=src)
 
     def file_copy_remote_exists(self, src, dest=None, **kwargs):
         if dest and not dest.startswith("/shared/images"):
-            raise NotImplementedError(
-                "Support only for images - destination is always /shared/images")
+            raise NotImplementedError("Support only for images - destination is always /shared/images")
 
         local_md5sum = self._file_copy_local_md5(filepath=src)
         file_basename = os.path.basename(src)
 
-        if not self._image_match(image_name=file_basename,
-                                 checksum=local_md5sum):
+        if not self._image_match(image_name=file_basename, checksum=local_md5sum):
             return False
         else:
             return True
@@ -410,13 +388,11 @@ class F5Device(BaseDevice):
         free_space = self._check_free_space(min_space=6)
 
         if not free_space:
-            raise RuntimeError(
-                "Not enough free space to install OS".format(volume))
+            raise RuntimeError("Not enough free space to install OS".format(volume))
 
         self._image_install(image_name=image_name, volume=volume)
 
-        if not self._wait_for_image_installed(image_name=image_name,
-                                              volume=volume):
+        if not self._wait_for_image_installed(image_name=image_name, volume=volume):
             raise RuntimeError("Installation of {} failed".format(volume))
 
     def checkpoint(self, filename):
@@ -452,8 +428,7 @@ class F5Device(BaseDevice):
 
     def _get_vlans(self):
         rd_list = self.soap_handler.Networking.RouteDomainV2.get_list()
-        rd_vlan_list = self.soap_handler.Networking.RouteDomainV2.get_vlan(
-            rd_list)
+        rd_vlan_list = self.soap_handler.Networking.RouteDomainV2.get_vlan(rd_list)
 
         return rd_vlan_list
 

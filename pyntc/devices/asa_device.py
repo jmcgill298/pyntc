@@ -10,8 +10,6 @@ from pyntc.templates import get_structured_data
 from .base_device import fix_docs
 from .ios_device import IOSDevice
 
-ASA_SSH_DEVICE_TYPE = 'cisco_asa_ssh'
-
 
 class RebootSignal(NTCError):
     pass
@@ -20,12 +18,8 @@ class RebootSignal(NTCError):
 @fix_docs
 class ASADevice(IOSDevice):
     def __init__(self, host, username, password, secret='', port=22, **kwargs):
-        super(IOSDevice, self).__init__(host, username, password,
-                                        vendor='cisco',
-                                        device_type=ASA_SSH_DEVICE_TYPE)
-
+        super(IOSDevice, self).__init__(host, username, password, vendor='cisco', device_type='cisco_asa_ssh')
         self.native = None
-
         self.host = host
         self.username = username
         self.password = password
@@ -63,8 +57,7 @@ class ASADevice(IOSDevice):
             current_images = []
 
         commands_to_exec = ["no {}".format(image) for image in current_images]
-        commands_to_exec.append("boot system {}{}".format(
-            vendor_specifics.get('image_location', ''), image_name))
+        commands_to_exec.append("boot system {}{}".format(vendor_specifics.get('image_location', ''), image_name))
 
         self.config_list(commands_to_exec)
 
@@ -83,17 +76,14 @@ class ASADevice(IOSDevice):
 
     def _interfaces_detailed_list(self):
         ip_int = self.show('show interface')
-        ip_int_data = get_structured_data('cisco_asa_show_interface.template',
-                                          ip_int)
+        ip_int_data = get_structured_data('cisco_asa_show_interface.template', ip_int)
 
         return ip_int_data
 
     def _raw_version_data(self):
         show_version_out = self.show('show version')
         try:
-            version_data = \
-                get_structured_data('cisco_asa_show_version.template',
-                                    show_version_out)[0]
+            version_data = get_structured_data('cisco_asa_show_version.template', show_version_out)[0]
             return version_data
         except IndexError:
             return {}
