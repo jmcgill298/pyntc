@@ -20,6 +20,7 @@ install_requires = [
     'junos-eznc',
     'scp',
     'f5-sdk',
+    'bigsuds',
 ]
 
 dependency_links = []
