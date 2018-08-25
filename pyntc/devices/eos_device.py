@@ -101,7 +101,7 @@ class EOSDevice(BaseDevice):
 
             sh_hostname_output = self.show('show hostname')
             self._facts.update(convert_dict_by_key(
-                    sh_hostname_output, {}, fill_in=True, whitelist=['hostname', 'fqdn']))
+                sh_hostname_output, {}, fill_in=True, whitelist=['hostname', 'fqdn']))
 
             self._facts['interfaces'] = self._get_interface_list()
             self._facts['vlans'] = self._get_vlan_list()
@@ -130,6 +130,7 @@ class EOSDevice(BaseDevice):
         # TODO: Validate this works
         # TODO: Add validation that OS was installed properly
         self.set_boot_options(image_name)
+        self.save()
         self.reboot()
 
     def open(self):
@@ -158,7 +159,9 @@ class EOSDevice(BaseDevice):
         self.show('copy running-config %s' % filename)
 
     def set_boot_options(self, image_name, **vendor_specifics):
-        self.show('install source %s' % image_name)
+        if ':' not in image_name:
+            image_name = 'flash:' + image_name
+        self.config('boot system %s' % image_name)
 
     def show(self, command, raw_text=False):
         try:
@@ -185,3 +188,4 @@ class EOSDevice(BaseDevice):
             self._startup_config = self.show('show startup-config', raw_text=True)
 
         return self._startup_config
+
