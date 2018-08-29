@@ -54,6 +54,9 @@ class IOSDevice(BaseDevice):
 
         return fc
 
+    def _get_vlan_list(self):
+        return [vlan['vlan_id'] for vlan in self._show_vlan()]
+
     def _interfaces_detailed_list(self):
         ip_int_br_out = self.show('show ip int br')
         ip_int_br_data = get_structured_data('cisco_ios_show_ip_int_brief.template', ip_int_br_out)
@@ -190,24 +193,27 @@ class IOSDevice(BaseDevice):
         return False
 
     def get_boot_options(self):
-        if self._is_catalyst():
+        try:
             show_boot_out = self.show('show boot')
-            boot_path_regex = r'BOOT path-list\s+:\s+(\S+)'
-            boot_path = re.search(boot_path_regex, show_boot_out).group(1)
-            boot_image = boot_path.replace('flash:/', '')
-        else:
+            boot_path_regex = (
+                r'BOOT path-list\s+:\s+(\S+)',
+                r'Boot.+next\s+reload:\s+BOOT\s+variable\s+=\s+(\S+?);',
+            )
+        except CommandError:
             show_boot_out = self.show('show run | inc boot')
-            boot_path_regex = r'boot system flash (\S+)'
-            match = re.search(boot_path_regex, show_boot_out)
-            if match:
-                boot_image = match.group(1)
-            else:
-                boot_image = None
+            boot_path_regex = (
+                r'boot system flash (\S+)',
+            )
+        for regex in boot_path_regex:
+            boot_image = re.search(regex, show_boot_out)
+            if boot_image is not None:
+                boot_image = boot_image.group(1).replace('flash:/', '')
+                break
 
         return {'sys': boot_image}
 
     def install_os(self, image_name, **vendor_specifics):
-        # TODO:
+        # TODO: Validate this works
         self.set_boot_options(image_name)
         self.reboot()
 
@@ -271,16 +277,21 @@ class IOSDevice(BaseDevice):
         self.native.send_command_timing(command)
         # If the user has enabled 'file prompt quiet' which dose not require any confirmation or feedback.
         # This will send return without requiring an OK.
-        # Send a return to pass the [OK]? message - Incease delay_factor for looking for response.
+        # Send a return to pass the [OK]? message - Increase delay_factor for looking for response.
         self.native.send_command_timing('\n', delay_factor=2)
         # Confirm that we have a valid prompt again before returning.
         self.native.find_prompt()
 
     def set_boot_options(self, image_name, **vendor_specifics):
-        if self._is_catalyst():
-            self.config('boot system flash:/%s' % image_name)
-        else:
-            self.config_list(['no boot system', 'boot system flash %s' % image_name])
+        try:
+            self.config('no boot system')
+        except CommandError:
+            pass
+
+        try:
+            self.config('boot system flash:/{}'.format(image_name))
+        except CommandError:
+            self.config('boot system flash {}'.format(image_name))
 
     def show(self, command, expect=False, expect_string=''):
         self._enable()
