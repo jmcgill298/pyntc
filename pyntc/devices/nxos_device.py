@@ -45,14 +45,11 @@ class NXOSDevice(BaseDevice):
     @property
     def facts(self):
         if self._facts is None:
-            # TODO: Fix pynxos to properly handle property; currently unable to refresh fact data
-            self._facts = self.native._get_show_version_facts()
-            self._facts['interfaces'] = self.native._get_interface_list()
-            self._facts['vlans'] = self.native._get_vlan_list()
-            self._facts['fqdn'] = 'N/A'
-
-            facts = strip_unicode(self._facts)
-            facts['vendor'] = self.vendor
+            # TODO: Fix pynxos to properly handle property based on None
+            if hasattr(self.native, '_facts'):
+                del self.native._facts
+            self._facts = strip_unicode(self.native.facts)
+            self._facts['vendor'] = self.vendor
 
         return self._facts
 
@@ -73,7 +70,7 @@ class NXOSDevice(BaseDevice):
 
     def install_os(self, image_name, **vendor_specifics):
         kickstart = vendor_specifics.get('kickstart')
-        self.set_boot_options(image_name, kickstart=kickstart)
+        return self.native.set_boot_options(image_name, kickstart=kickstart)
 
     def open(self):
         pass
@@ -102,8 +99,7 @@ class NXOSDevice(BaseDevice):
 
     def set_boot_options(self, image_name, **vendor_specifics):
         # TODO: Update pynxos class to use install_os name
-        kickstart = vendor_specifics.get('kickstart')
-        return self.native.set_boot_options(image_name, kickstart=kickstart)
+        raise NotImplementedError
 
     def show(self, command, raw_text=False):
         try:
