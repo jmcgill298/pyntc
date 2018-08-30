@@ -44,3 +44,29 @@ class IOSData:
          'speed': 0, 'state': 'connected', 'vlan': None},
     ]
     vlan_list = ['1', '10', '20', '30', '40', '60', '70', '100', '133', '1002', '1003', '1004', '1005']
+
+
+class NXOSData:
+
+    vendor = 'cisco'
+    model = 'Nexus9000 C9396PX Chassis'
+    os_version = '7.0(3)I4(1)'
+    image_name = 'nxos.7.0.3.I4.1.bin'
+    hostname = 'n9k2'
+    fqdn = 'N/A'
+    uptime = '2 weeks, 4 days, 12 hours, 17 minutes'
+    interface_list = ['mgmt0'] + ['Ethernet1/{}'.format(intf) for intf in range(1,49)] \
+                     + ['Ethernet2/{}'.format(intf) for intf in range(1,13)] + ['port-channel11'] \
+                     + ['loopback{}'.format(intf) for intf in (0, 100, 101, 102, 103)] \
+                     + ['Vlan{}'.format(intf) for intf in (1, 10, 100, 2000)]
+    interface_status_list = [
+        {'description': '', 'duplex': 'duplexFull', 'interface': 'Management1',
+         'speed': 1000000000, 'state': 'connected', 'vlan': None},
+        {'description': '', 'duplex': 'duplexFull', 'interface': 'Ethernet2',
+         'speed': 0, 'state': 'connected', 'vlan': 1},
+        {'description': '', 'duplex': 'duplexFull', 'interface': 'Ethernet3',
+         'speed': 0, 'state': 'connected', 'vlan': 1},
+        {'description': '', 'duplex': 'duplexFull', 'interface': 'Ethernet1',
+         'speed': 0, 'state': 'connected', 'vlan': None},
+    ]
+    vlan_list = ['1', '20', '200', '201', '202', '203', '205', '206', '207', '301', '302']

@@ -56,9 +56,6 @@ class NXOSDevice(BaseDevice):
 
         return self._facts
 
-    def get_boot_options(self):
-        return self.native.get_boot_options()
-
     def file_copy(self, src, dest=None, file_system='bootflash:'):
         dest = dest or os.path.basename(src)
         try:
@@ -70,6 +67,9 @@ class NXOSDevice(BaseDevice):
     def file_copy_remote_exists(self, src, dest=None, file_system='bootflash:'):
         dest = dest or os.path.basename(src)
         return self.native.file_copy_remote_exists(src, dest, file_system=file_system)
+
+    def get_boot_options(self):
+        return self.native.get_boot_options()
 
     def install_os(self, image_name, **vendor_specifics):
         kickstart = vendor_specifics.get('kickstart')
@@ -105,15 +105,6 @@ class NXOSDevice(BaseDevice):
         kickstart = vendor_specifics.get('kickstart')
         return self.native.set_boot_options(image_name, kickstart=kickstart)
 
-    @property
-    def timeout(self):
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, seconds):
-        self._timeout = seconds
-        self.native.timeout = seconds
-
     def show(self, command, raw_text=False):
         try:
             return strip_unicode(self.native.show(command, raw_text=raw_text))
@@ -132,3 +123,12 @@ class NXOSDevice(BaseDevice):
             self._startup_config = self.show('show startup-config', raw_text=True)
 
         return self._startup_config
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, seconds):
+        self._timeout = seconds
+        self.native.timeout = seconds
