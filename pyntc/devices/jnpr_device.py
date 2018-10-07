@@ -98,8 +98,8 @@ class JunosDevice(BaseDevice):
         with open(filename, 'w') as f:
             f.write(self.running_config)
 
-    def checkpoint(self, filename):
-        self.save(filename)
+    def checkpoint(self, filename, **scpargs):
+        self.save(filename, **scpargs)
 
     def close(self):
         if self.connected:
@@ -202,18 +202,16 @@ class JunosDevice(BaseDevice):
 
         return self._running_config
 
-    def save(self, filename=None):
+    def save(self, filename=None, **scpargs):
         if filename is None:
             self.cu.commit()
         else:
-            temp_file = NamedTemporaryFile()
-            temp_file.write(self.show('show config'))
-            temp_file.flush()
+            with NamedTemporaryFile() as temp_file:
+                temp_file.write(str.encode(self.show('show config')))
+                temp_file.flush()
 
-            with SCP(self.native) as scp:
-                scp.put(temp_file.name, remote_path=filename)
-
-            temp_file.close()
+                with SCP(self.native, **scpargs) as scp:
+                    scp.put(temp_file.name, remote_path=filename)
 
     def set_boot_options(self, image_name, **vendor_specifics):
         raise NotImplementedError
