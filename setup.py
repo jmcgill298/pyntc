@@ -21,6 +21,8 @@ install_requires = [
     'scp',
     'f5-sdk',
     'bigsuds',
+    'pyeapi',
+    'junos-eznc',
 ]
 
 dependency_links = []
