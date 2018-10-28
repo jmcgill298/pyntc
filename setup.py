@@ -23,7 +23,6 @@ install_requires = [
     'bigsuds',
     'pyeapi',
     'junos-eznc',
-    'scp',
 ]
 
 dependency_links = []
