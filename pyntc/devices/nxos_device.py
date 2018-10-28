@@ -1,4 +1,4 @@
-"""Module for using an NXOX device over NX-API.
+"""Module for using an NXOS device over NX-API.
 """
 import os
 

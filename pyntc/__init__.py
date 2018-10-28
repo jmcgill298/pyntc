@@ -1,4 +1,4 @@
-"""Kickoff functions for getting instancs of device objects.
+"""Kickoff functions for getting instances of device objects.
 """
 
 import os

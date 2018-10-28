@@ -156,6 +156,7 @@ class TestNXOSDevice(unittest.TestCase):
         self.device.checkpoint('good_checkpoint')
         self.device.native.checkpoint.assert_called_with('good_checkpoint')
 
+    # noinspection PyDictCreation
     @mock.patch('pynxos.device.Device.facts', new_callable=mock.PropertyMock)
     def test_facts(self, mock_facts):
         expected = {

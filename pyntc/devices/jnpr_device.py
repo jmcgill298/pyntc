@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from jnpr.junos import Device as JunosNativeDevice
 from jnpr.junos.utils.config import Config as JunosNativeConfig
 from jnpr.junos.utils.fs import FS as JunosNativeFS
-from jnpr.junos.utils.sw import SW as JunosNativdSW
+from jnpr.junos.utils.sw import SW as JunosNativeSW
 from jnpr.junos.utils.scp import SCP
 # TODO: Check validity of this in latest pyez
 from jnpr.junos.op.ethport import EthPortTable
@@ -34,7 +34,7 @@ class JunosDevice(BaseDevice):
         self.open()
         self.cu = JunosNativeConfig(self.native)
         self.fs = JunosNativeFS(self.native)
-        self.sw = JunosNativdSW(self.native)
+        self.sw = JunosNativeSW(self.native)
 
     @staticmethod
     def _file_copy_local_file_exists(filepath):
@@ -225,6 +225,9 @@ class JunosDevice(BaseDevice):
             raise CommandError(command, 'Juniper "show" commands must begin with "show".')
 
         return self.native.cli(command, warning=False)
+
+    def set_boot_options(self, image_name, **vendor_specifics):
+        raise NotImplementedError
 
     def show_list(self, commands, raw_text=True):
         responses = []

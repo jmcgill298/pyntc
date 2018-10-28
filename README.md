@@ -79,7 +79,7 @@ The second way to get started with pyntc is to use the pyntc configuration file.
 This simplifies creating device objects since you no longer need to specify credentials and other device specific parameters when you build the device object.  Instead, they are stored in the conf file.
 
 
-# pyntc Configration File
+# pyntc Configuration File
 
 - filename:  `.ntc.conf`
 - Priority of locating the conf file:

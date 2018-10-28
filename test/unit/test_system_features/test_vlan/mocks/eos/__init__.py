@@ -1,7 +1,7 @@
 import os
 import json
 
-CURRNENT_DIR = os.path.dirname(os.path.realpath(__file__))
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def _load_json_from_path(path):
@@ -10,7 +10,7 @@ def _load_json_from_path(path):
 
 
 def get(vlan_id):
-    path = os.path.join(CURRNENT_DIR, 'get', vlan_id)
+    path = os.path.join(CURRENT_DIR, 'get', vlan_id)
     if not os.path.isfile(path):
         return None
 
@@ -18,5 +18,5 @@ def get(vlan_id):
 
 
 def getall():
-    path = os.path.join(CURRNENT_DIR, 'getall')
+    path = os.path.join(CURRENT_DIR, 'getall')
     return _load_json_from_path(path)

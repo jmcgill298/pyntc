@@ -212,7 +212,9 @@ class BaseDevice(object):
         Args:
             image_name (str): The main system image file name.
 
-        Keyword Args: many implementors may choose to supply a kickstart parameter to specify a kickstart image.
+        Keyword Args:
+            kickstart: Used by NXOS devices to provide kickstart image name.
+            volume: Used by F5 devices to provide volume to install image
         """
         raise NotImplementedError
 

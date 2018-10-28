@@ -7,7 +7,7 @@ from pyntc.errors import NTCError
 class FileTransferError(NTCError):
     def __init__(self, message=None):
         if message is None:
-            message = 'An error occured during transfer. Please make sure the local file exists ' \
+            message = 'An error occurred during transfer. Please make sure the local file exists ' \
                       'and that appropriate permissions are set on the remote device.'
         super(FileTransferError, self).__init__(message)
 

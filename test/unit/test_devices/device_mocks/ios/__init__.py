@@ -1,7 +1,7 @@
 import os
 import re
 
-CURRNENT_DIR = os.path.dirname(os.path.realpath(__file__))
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def send_command(command, **kwargs):
@@ -16,7 +16,7 @@ def send_command(command, **kwargs):
     if command == '\n':
         command = 'return'
 
-    path = os.path.join(CURRNENT_DIR, 'send_command', command)
+    path = os.path.join(CURRENT_DIR, 'send_command', command)
 
     if not os.path.isfile(path):
         return '% Error: mock error'
