@@ -6,24 +6,6 @@ import importlib
 from pyntc.errors import NTCError, FeatureNotFoundError
 
 
-class SetBootImageError(NTCError):
-    pass
-
-
-class RollbackError(NTCError):
-    pass
-
-
-class FileTransferError(NTCError):
-    pass
-
-
-class RebootTimerError(NTCError):
-    def __init__(self, device_type):
-        super(RebootTimerError, self).__init__(
-            'Reboot timer not supported on %s.' % device_type)
-
-
 def fix_docs(cls):
     for name, func in vars(cls).items():
         if hasattr(func, '__call__') and not func.__doc__:
@@ -201,7 +183,7 @@ class BaseDevice(object):
         """Get current boot variables ike system image and kickstart image.
 
         Returns:
-            A dictionary, e.g. { 'kick': router_kick.img, 'sys': 'router_sys.img'}
+            A dictionary, e.g. {'kick': router_kick.img, 'sys': 'router_sys.img'}
         """
         raise NotImplementedError
 
@@ -337,3 +319,21 @@ class BaseDevice(object):
         """Return the startup configuration of the device.
         """
         raise NotImplementedError
+
+
+class FileTransferError(NTCError):
+    pass
+
+
+class RebootTimerError(NTCError):
+    def __init__(self, device_type):
+        super(RebootTimerError, self).__init__('Reboot timer not supported on %s.' % device_type)
+
+
+class RollbackError(NTCError):
+    pass
+
+
+class SetBootImageError(NTCError):
+    pass
+

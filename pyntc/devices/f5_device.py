@@ -14,8 +14,10 @@ from .base_device import BaseDevice
 
 
 class F5Device(BaseDevice):
+
     def __init__(self, host, username, password, **kwargs):
         super(F5Device, self).__init__(host, username, password, vendor='f5', device_type='f5_tmos_icontrol')
+
         self.vendor = 'F5 Networks'
         self.host = host
         self.username = username
@@ -160,7 +162,6 @@ class F5Device(BaseDevice):
                     break
 
                 end = fileobj.tell()
-
                 if end < chunk_size:
                     end = size
                 content_range = "{}-{}/{}".format(start, end - 1, size)
@@ -200,7 +201,6 @@ class F5Device(BaseDevice):
             bool - True / False if reboot has been successful.
         """
         end_time = time.time() + timeout
-
         time.sleep(60)
 
         while time.time() < end_time:

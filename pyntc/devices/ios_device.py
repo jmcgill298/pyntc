@@ -17,13 +17,9 @@ from netmiko import ConnectHandler
 from netmiko import FileTransfer
 
 
-# TODO: Understand purpose and make class do something
-class RebootSignal(NTCError):
-    pass
-
-
 @fix_docs
 class IOSDevice(BaseDevice):
+
     def __init__(self, host, username, password, secret='', port=22, **kwargs):
         super(IOSDevice, self).__init__(host, username, password, vendor='cisco', device_type='cisco_ios_ssh')
         self.native = None
@@ -53,6 +49,11 @@ class IOSDevice(BaseDevice):
         fc = FileTransfer(self.native, src, dest, file_system=file_system)
 
         return fc
+
+    def _get_file_system(self):
+        raw_data = self.show('dir')
+        file_system = re.match(r'\s*.*?(\S+:)', raw_data).group(1)
+        return file_system
 
     def _get_vlan_list(self):
         return [vlan['vlan_id'] for vlan in self._show_vlan()]
@@ -169,20 +170,20 @@ class IOSDevice(BaseDevice):
         return self._facts
 
     def file_copy(self, src, dest=None, file_system='flash:'):
-            fc = self._file_copy_instance(src, dest, file_system=file_system)
-            self._enable()
-            #        if not self.fc.verify_space_available():
-            #            raise FileTransferError('Not enough space available.')
+        fc = self._file_copy_instance(src, dest, file_system=file_system)
+        self._enable()
+        #        if not self.fc.verify_space_available():
+        #            raise FileTransferError('Not enough space available.')
 
-            try:
-                fc.enable_scp()
-                fc.establish_scp_conn()
-                fc.transfer_file()
-            # TODO: Discover expected exceptions and raise appropriately
-            except:
-                raise FileTransferError
-            finally:
-                fc.close_scp_chan()
+        try:
+            fc.enable_scp()
+            fc.establish_scp_conn()
+            fc.transfer_file()
+        # TODO: Discover expected exceptions and raise appropriately
+        except:
+            raise FileTransferError
+        finally:
+            fc.close_scp_chan()
 
     def file_copy_remote_exists(self, src, dest=None, file_system='flash:'):
         fc = self._file_copy_instance(src, dest, file_system=file_system)
@@ -193,22 +194,28 @@ class IOSDevice(BaseDevice):
         return False
 
     def get_boot_options(self):
+        # TODO: CREATE A MOCK FOR TESTING THIS FUNCTION
+        boot_path_regex = r'(?:BOOT variable\s+=\s+|BOOT path-list\s+:\s+|boot\s+system\s+\S+\s+)(\S+)(?:;|)\s*'
         try:
-            show_boot_out = self.show('show boot')
-            boot_path_regex = (
-                r'BOOT path-list\s+:\s+(\S+)',
-                r'Boot.+next\s+reload:\s+BOOT\s+variable\s+=\s+(\S+?);',
-            )
+            # Try show bootvar command first
+            show_boot_out = self.show('show bootvar')
         except CommandError:
-            show_boot_out = self.show('show run | inc boot')
-            boot_path_regex = (
-                r'boot system flash (\S+)',
-            )
-        for regex in boot_path_regex:
-            boot_image = re.search(regex, show_boot_out)
-            if boot_image is not None:
-                boot_image = boot_image.group(1).replace('flash:/', '')
-                break
+            try:
+                # Try show boot if previous command was invalid
+                show_boot_out = self.show('show boot')
+            except CommandError:
+                # Default to running config value
+                show_boot_out = self.show('show run | inc boot')
+
+        match = re.search(boot_path_regex, show_boot_out)
+        if match:
+            boot_path = match.group(1)
+            file_system = self._get_file_system()
+            boot_image = boot_path.replace(file_system, '')
+            boot_image = boot_image.replace('/', '')
+            boot_image = boot_image.split(',')[0]
+        else:
+            boot_image = None
 
         return {'sys': boot_image}
 
@@ -283,15 +290,12 @@ class IOSDevice(BaseDevice):
         self.native.find_prompt()
 
     def set_boot_options(self, image_name, **vendor_specifics):
+        file_system = self._get_file_system()
         try:
-            self.config('no boot system')
+            self.config_list(['no boot system', 'boot system {0}/{1}'.format(file_system, image_name)])
         except CommandError:
-            pass
-
-        try:
-            self.config('boot system flash:/{}'.format(image_name))
-        except CommandError:
-            self.config('boot system flash {}'.format(image_name))
+            file_system = file_system.replace(':', '')
+            self.config_list(['no boot system', 'boot system {0} {1}'.format(file_system, image_name)])
 
     def show(self, command, expect=False, expect_string=''):
         self._enable()
@@ -317,3 +321,8 @@ class IOSDevice(BaseDevice):
             self._startup_config = self.show('show startup-config')
 
         return self._startup_config
+
+
+# TODO: Understand purpose and make class do something
+class RebootSignal(NTCError):
+    pass

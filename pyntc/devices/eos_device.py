@@ -45,7 +45,14 @@ class EOSDevice(BaseDevice):
             interface_dictionary['interface'] = key
             interfaces_list.append(interface_dictionary)
 
-        return convert_list_by_key(interfaces_list, eos_key_maps.INTERFACES_KM, fill_in=True,  whitelist=['interface'])
+        return convert_list_by_key(interfaces_list, eos_key_maps.INTERFACES_KM, fill_in=True, whitelist=['interface'])
+
+    @staticmethod
+    def _parse_response(response, raw_text):
+        if raw_text:
+            return [x['result']['output'] for x in response]
+        else:
+            return [x['result'] for x in response]
 
     @staticmethod
     def _uptime_to_string(uptime):
@@ -61,13 +68,6 @@ class EOSDevice(BaseDevice):
         seconds = uptime
 
         return '%02d:%02d:%02d:%02d' % (days, hours, mins, seconds)
-
-    @staticmethod
-    def _parse_response(response, raw_text):
-        if raw_text:
-            return [x['result']['output'] for x in response]
-        else:
-            return [x['result'] for x in response]
 
     def backup_running_config(self, filename):
         with open(filename, 'w') as f:
@@ -188,4 +188,3 @@ class EOSDevice(BaseDevice):
             self._startup_config = self.show('show startup-config', raw_text=True)
 
         return self._startup_config
-

@@ -14,14 +14,12 @@ from pyntc.templates import get_structured_data
 from .base_device import BaseDevice, fix_docs
 
 
-class RebootSignal(NTCError):
-    pass
-
-
 @fix_docs
 class ASADevice(BaseDevice):
+
     def __init__(self, host, username, password, secret='', port=22, **kwargs):
         super(BaseDevice, self).__init__(host, username, password, vendor='cisco', device_type='cisco_asa_ssh')
+
         self.native = None
         self.host = host
         self.username = username
@@ -196,9 +194,6 @@ class ASADevice(BaseDevice):
                                          verbose=False)
             self._connected = True
 
-    def rollback(self, rollback_to):
-        raise NotImplementedError
-
     def reboot(self, timer=0):
         def handler():
             raise RebootSignal('Interrupting after reload')
@@ -220,6 +215,9 @@ class ASADevice(BaseDevice):
             signal.alarm(0)
 
         signal.alarm(0)
+
+    def rollback(self, rollback_to):
+        raise NotImplementedError
 
     @property
     def running_config(self):
@@ -276,3 +274,7 @@ class ASADevice(BaseDevice):
             self._startup_config = self.show('show startup-config')
 
         return self._startup_config
+
+
+class RebootSignal(NTCError):
+    pass

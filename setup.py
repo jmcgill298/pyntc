@@ -16,11 +16,11 @@ install_requires = [
     'mock>=1.3',
     'textfsm',
     'terminal',
+    'f5-sdk',
+    'bigsuds',
     'pyeapi',
     'junos-eznc',
     'scp',
-    'f5-sdk',
-    'bigsuds',
     'pyeapi',
     'junos-eznc',
 ]
