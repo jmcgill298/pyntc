@@ -60,7 +60,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_remote_exists(self, mock_ft):
-        self.device.native.send_command.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.check_file_exists.return_value = True
@@ -72,7 +71,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_remote_exists_bad_md5(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.check_file_exists.return_value = True
@@ -84,7 +82,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_remote_exists_not(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.check_file_exists.return_value = False
@@ -96,7 +93,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy(self, mock_ft):
-        self.device.native.send_command.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
 
         mock_ft_instance = mock_ft.return_value
@@ -110,7 +106,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_different_dest(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
 
@@ -124,7 +119,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_fail(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.transfer_file.side_effect = Exception
@@ -135,7 +129,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_socket_closed_good_md5(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.transfer_file.side_effect = OSError
@@ -152,7 +145,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch("pyntc.devices.ios_device.FileTransfer", autospec=True)
     def test_file_copy_fail_socket_closed_bad_md5(self, mock_ft):
-        self.device.native.send_command_timing.side_effect = None
         self.device.native.send_command.return_value = "flash: /dev/null"
         mock_ft_instance = mock_ft.return_value
         mock_ft_instance.transfer_file.side_effect = OSError
@@ -178,7 +170,6 @@ class TestIOSDevice(unittest.TestCase):
 
     @mock.patch.object(IOSDevice, "_get_file_system", return_value="bootflash:")
     def test_boot_options_show_bootvar(self, mock_boot):
-        self.device.native.send_command.side_effect = None
         self.device.native.send_command.return_value = f"BOOT variable = bootflash:{BOOT_IMAGE}"
         boot_options = self.device.boot_options
         self.assertEqual(boot_options, {"sys": BOOT_IMAGE})
@@ -356,19 +347,6 @@ class TestIOSDevice(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-def test_check_command_output_for_errors(ios_device):
-    command_passes = ios_device._check_command_output_for_errors("valid command", "valid output")
-    assert command_passes is None
-
-
-@pytest.mark.parametrize("output", (r"% invalid output", "Error: invalid output"))
-def test_check_command_output_for_errors_error(output, ios_device):
-    with pytest.raises(ios_module.CommandError) as err:
-        ios_device._check_command_output_for_errors("invalid command", output)
-    assert err.value.command == "invalid command"
-    assert err.value.cli_error_msg == output
 
 
 @mock.patch.object(IOSDevice, "_check_command_output_for_errors")

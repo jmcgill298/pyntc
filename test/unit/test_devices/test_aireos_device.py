@@ -43,19 +43,6 @@ def test_ap_images_pass_boot_options(mock_ap_boot_options, aireos_device, aireos
     mock_ap_boot_options.assert_not_called()
 
 
-def test_check_command_output_for_errors(aireos_device):
-    command_passes = aireos_device._check_command_output_for_errors("valid command", "valid output")
-    assert command_passes is None
-
-
-@pytest.mark.parametrize("output", (r"Incorrect usage: invalid output", "Error: invalid output"))
-def test_check_command_output_for_errors_error(output, aireos_device):
-    with pytest.raises(aireos_module.CommandError) as err:
-        aireos_device._check_command_output_for_errors("invalid command", output)
-    assert err.value.command == "invalid command"
-    assert err.value.cli_error_msg == output
-
-
 def test_enter_config(aireos_device):
     aireos_device._enter_config()
     aireos_device.native.config_mode.assert_called()

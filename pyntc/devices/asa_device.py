@@ -12,7 +12,8 @@ from netmiko import ConnectHandler
 from netmiko import FileTransfer
 
 from pyntc.utils import get_structured_data
-from .base_device import BaseDevice, fix_docs
+from .base_device import fix_docs
+from .netmiko_device import NetmikoBaseDevice
 from pyntc.errors import (
     NTCError,
     CommandError,
@@ -26,7 +27,7 @@ from pyntc.errors import (
 
 
 @fix_docs
-class ASADevice(BaseDevice):
+class ASADevice(NetmikoBaseDevice):
     """Cisco ASA Device Implementation."""
 
     vendor = "cisco"
@@ -175,22 +176,6 @@ class ASADevice(BaseDevice):
         if self._connected:
             self.native.disconnect()
             self._connected = False
-
-    def config(self, command):
-        self._enter_config()
-        self._send_command(command)
-        self.native.exit_config_mode()
-
-    def config_list(self, commands):
-        self._enter_config()
-        entered_commands = []
-        for command in commands:
-            entered_commands.append(command)
-            try:
-                self._send_command(command)
-            except CommandError as e:
-                raise CommandListError(entered_commands, command, e.cli_error_msg)
-        self.native.exit_config_mode()
 
     def enable(self):
         """Ensure device is in enable mode.
@@ -349,24 +334,6 @@ class ASADevice(BaseDevice):
                 command="boot system {0}/{1}".format(file_system, image_name),
                 message="Setting boot command did not yield expected results",
             )
-
-    def show(self, command, expect_string=None):
-        self.enable()
-        return self._send_command(command, expect_string=expect_string)
-
-    def show_list(self, commands):
-        self.enable()
-
-        responses = []
-        entered_commands = []
-        for command in commands:
-            entered_commands.append(command)
-            try:
-                responses.append(self._send_command(command))
-            except CommandError as e:
-                raise CommandListError(entered_commands, command, e.cli_error_msg)
-
-        return responses
 
     @property
     def startup_config(self):
